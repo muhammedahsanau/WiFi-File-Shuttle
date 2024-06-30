@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login</title>
+    <link rel="stylesheet" href="styles.css" />
+    <script>
+      async function login(event) {
+        event.preventDefault();
+
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        try {
+          const response = await fetch("/login", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ username, password }),
+          });
+
+          if (!response.ok) {
+            const error = await response.json();
+            if (response.status === 401) {
+              document.getElementById("error").innerText = error.message;
+            } else {
+              console.error("Login failed:", error);
+              alert("Failed to login. Please try again.");
+            }
+          } else {
+            window.location.href = "/"; // Redirect to main page on successful login
+          }
+        } catch (error) {
+          console.error("Error during login:", error);
+          alert("Invalid username or password, Please try again.");
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <br />
+    <br />
+    <br />
+    <br />
+    <br />
+    <br />
+    <br />
+    <br />
+    <br />
+    <br />
+    <h1>Login</h1>
+    <form onsubmit="login(event)">
+      <label for="username">Username:</label>
+      <input type="text" id="username" name="username" required /><br /><br />
+      <label for="password">Password:</label>
+      <input
+        type="password"
+        id="password"
+        name="password"
+        required
+      /><br /><br />
+      <button type="submit">Login</button>
+      <p id="error" style="color: red"></p>
+      <!-- Error message display -->
+    </form>
+    <br />
+    <br />
+    <br />
+    <br />
+    <br />
+    <br />
+    <br />
+    <br />
+    <br />
+    <br />
+    <br />
+    <br />
+    <br />
+    <footer>© 2024 Your Company</footer>
+  </body>
+</html>
