@@ -4,7 +4,7 @@ const path = require("path");
 const os = require("os");
 const bodyParser = require("body-parser");
 const session = require("express-session");
-
+const multer = require("multer");
 const app = express();
 const PORT = 3000;
 const BASE_DIRECTORY = "../../../"; // Replace with the base directory path you want to serve
@@ -23,6 +23,9 @@ app.use(
 );
 
 app.use(express.static("public"));
+
+// Multer configuration for file upload
+const upload = multer({ dest: "uploads/" });
 
 // Function to authenticate users
 function authenticateUser(username, password) {
@@ -104,6 +107,61 @@ app.get("/files", isAuthenticated, (req, res) => {
     res.json({ path: req.query.dir || "", files: fileDetails });
   });
 });
+
+const uploadFolderDir = path.join(__dirname, "/uploads"); // Replace with your actual upload directory path
+
+function emptyUploadDir(dirPath) {
+  fs.readdir(dirPath, (err, files) => {
+    if (err) throw err;
+
+    for (const file of files) {
+      const filePath = path.join(dirPath, file);
+
+      fs.lstat(filePath, (err, stats) => {
+        if (err) throw err;
+
+        if (stats.isDirectory()) {
+          // Recursively delete files in subdirectories
+          emptyUploadDir(filePath);
+        } else {
+          // Delete file
+          fs.unlink(filePath, (err) => {
+            if (err) throw err;
+          });
+        }
+      });
+    }
+  });
+}
+
+// Route to handle file uploads
+app.post(
+  "/upload",
+  isAuthenticated,
+  isAdmin,
+  upload.single("file"),
+  (req, res) => {
+    emptyUploadDir(uploadFolderDir);
+    const file = req.file;
+    const uploadDir = BASE_DIRECTORY + req.body.uploadDir; // Directory path to save the file
+
+    if (!file) {
+      return res.status(400).send("No file uploaded.");
+    }
+
+    // Move the uploaded file to the specified directory
+    const targetDir = path.join(__dirname, uploadDir);
+    const targetPath = path.join(targetDir, file.originalname);
+
+    fs.rename(file.path, targetPath, (err) => {
+      if (err) {
+        console.error("Error moving file:", err);
+        return res.status(500).send("Error uploading file.");
+      }
+      res.send("File uploaded successfully.");
+    });
+  }
+);
 
 // Endpoint to download a file
 app.get("/download", isAuthenticated, isAdmin, (req, res) => {

@@ -15,6 +15,33 @@
     <h1>Files in Directory</h1>
     <div id="current-path"></div>
     <ul id="file-list"></ul>
+    <form id="uploadForm" enctype="multipart/form-data">
+      <input type="file" id="fileInput" name="file" required />
+      <table>
+        <tr>
+          <td>
+            <button id="uploadButton" type="button" onclick="uploadFile()">
+              Upload File
+            </button>
+          </td>
+
+          <td>
+            <img
+              id="uploadLoading"
+              src="https://www.clipartbest.com/cliparts/RTG/Ey9/RTGEy9xbc.gif"
+              alt="loading..."
+              style="
+                display: none;
+                height: 30px;
+                width: 30px;
+                margin-left: 50px;
+                margin-bottom: 12px;
+              "
+            />
+          </td>
+        </tr>
+      </table>
+    </form>
     <button onclick="goBack()">Go Back</button>
 
     <script>
@@ -70,6 +97,52 @@
         parts.pop();
         currentPath = parts.join("/");
         fetchFiles();
+      }
+
+      async function uploadFile() {
+        const fileInput = document.getElementById("fileInput");
+        const file = fileInput.files[0];
+
+        if (!file) {
+          alert("Please select a file to upload.");
+          return;
+        }
+
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("uploadDir", currentPath);
+
+        // Show loading GIF
+        const loadingGif = document.getElementById("uploadLoading");
+        const uploadButton = document.getElementById("uploadButton");
+
+        loadingGif.style.display = "block";
+        // disble upload button
+        uploadButton.disabled = true;
+
+        try {
+          const response = await fetch("/upload", {
+            method: "POST",
+            body: formData,
+          });
+
+          // Hide loading GIF after upload completes
+          loadingGif.style.display = "none";
+          // enable upload button again
+          uploadButton.disabled = false;
+
+          if (!response.ok) {
+            const errorMessage = await response.text();
+            alert(`Failed to upload file: ${errorMessage}`);
+          } else {
+            fetchFiles();
+            alert("File uploaded successfully.");
+            // Optionally, update UI or take further actions
+          }
+        } catch (error) {
+          console.error("Error uploading file:", error);
+          alert("An error occurred while uploading file.");
+        }
       }
 
       fetchFiles();
