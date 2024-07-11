@@ -26,18 +26,7 @@
           </td>
 
           <td>
-            <img
-              id="uploadLoading"
-              src="https://www.clipartbest.com/cliparts/RTG/Ey9/RTGEy9xbc.gif"
-              alt="loading..."
-              style="
-                display: none;
-                height: 30px;
-                width: 30px;
-                margin-left: 50px;
-                margin-bottom: 12px;
-              "
-            />
+            <div id="uploadLoading" class="spinner"></div>
           </td>
         </tr>
       </table>
@@ -82,6 +71,12 @@
                 file.created
               ).toLocaleString()})`;
               listItem.appendChild(link);
+
+              // Add delete button
+              const deleteButton = document.createElement("button");
+              deleteButton.textContent = "Delete";
+              deleteButton.onclick = () => deleteFile(file.name);
+              listItem.appendChild(deleteButton);
             }
             fileList.appendChild(listItem);
           });
@@ -112,12 +107,12 @@
         formData.append("file", file);
         formData.append("uploadDir", currentPath);
 
-        // Show loading GIF
+        // Show loading animation
         const loadingGif = document.getElementById("uploadLoading");
         const uploadButton = document.getElementById("uploadButton");
 
         loadingGif.style.display = "block";
-        // disble upload button
+        // disable upload button
         uploadButton.disabled = true;
 
         try {
@@ -126,7 +121,7 @@
             body: formData,
           });
 
-          // Hide loading GIF after upload completes
+          // Hide loading animation after upload completes
           loadingGif.style.display = "none";
           // enable upload button again
           uploadButton.disabled = false;
@@ -142,6 +137,32 @@
         } catch (error) {
           console.error("Error uploading file:", error);
           alert("An error occurred while uploading file.");
+        }
+      }
+
+      async function deleteFile(fileName) {
+        if (confirm(`Are you sure you want to delete ${fileName}?`)) {
+          try {
+            const response = await fetch(
+              `/delete?path=${encodeURIComponent(
+                currentPath ? `${currentPath}/${fileName}` : fileName
+              )}`,
+              {
+                method: "DELETE",
+              }
+            );
+
+            if (!response.ok) {
+              const errorMessage = await response.text();
+              alert(`Failed to delete file: ${errorMessage}`);
+            } else {
+              fetchFiles();
+              alert("File deleted successfully.");
+            }
+          } catch (error) {
+            console.error("Error deleting file:", error);
+            alert("An error occurred while deleting file.");
+          }
         }
       }
 

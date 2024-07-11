@@ -191,6 +191,19 @@ app.get("/download", isAuthenticated, isAdmin, (req, res) => {
   });
 });
 
+// Endpoint to delete a file
+app.delete("/delete", isAuthenticated, isAdmin, (req, res) => {
+  const filePath = path.join(BASE_DIRECTORY, req.query.path);
+
+  fs.unlink(filePath, (err) => {
+    if (err) {
+      console.error("Error deleting file:", err);
+      return res.status(500).send("Error deleting file.");
+    }
+    res.send("File deleted successfully.");
+  });
+});
+
 // Function to get the local IP address
 function getLocalIpAddress() {
   const interfaces = os.networkInterfaces();
